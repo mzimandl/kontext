@@ -1,6 +1,6 @@
 name: Python type check
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
