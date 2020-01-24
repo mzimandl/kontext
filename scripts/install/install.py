@@ -1,6 +1,5 @@
-from typing import List
-
 import os
+import sys
 import subprocess
 import inspect
 import argparse
@@ -41,10 +40,14 @@ if __name__ == "__main__":
     argparser.add_argument('--patch', dest='patch_path', action='store', default=None, help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version', action='store', default=MANATEE_VER, help='Set Manatee version')
     argparser.add_argument('-v', dest='verbose', action='store_true', default=False, help='Verbose mode')
+    argparser.add_argument('--test', action='store_true', default=None, help='Test mode only installs basic dependencies')
     args = argparser.parse_args()
 
+    if args.test:
+        print('Running in test mode...')
+
     stdout = open(os.devnull, 'wb')
-    if args.verbose:
+    if args.verbose or args.test:
         stdout = None
 
     # install prerequisites
@@ -57,6 +60,16 @@ if __name__ == "__main__":
 
     # import steps here, because some depend on packages installed by this script
     import steps
+
+    # test section
+    if args.test:
+        steps.SetupManatee(KONTEXT_PATH, stdout)
+        steps.SetupKontext(KONTEXT_PATH, stdout)
+        steps.SetupDefaultUsers(KONTEXT_PATH, stdout)
+        steps.SetupGunicorn(KONTEXT_PATH, stdout)
+        print('Test successful')
+        sys.exit(0)
+
     # run installation steps
     steps.SetupManatee(KONTEXT_PATH, stdout).run(args.manatee_version, args.patch_path)
     steps.SetupKontext(KONTEXT_PATH, stdout).run()
