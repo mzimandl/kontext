@@ -398,7 +398,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => action.payload.formType === this.state.formType,
             action => {
                 this.changeState(state => {
-                    state.suggestionsVisible[action.payload.sourceId] = action.payload.tokenIdx;
+                    state.suggestionsVisible[action.payload.sourceId] = state.suggestionsVisible[action.payload.sourceId] === action.payload.tokenIdx ?
+                                                                        null : action.payload.tokenIdx;
                 });
             }
         );
@@ -776,11 +777,17 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 if (queryObj.queryParsed[tokenIdx].isExtended) {
                     richText.push(
-                        `<a class="sh-modified" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</a>`);
+                        `<span class="sh-modified" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</span>`);
+                    richText.push(
+                        `<a contenteditable=false data-tokenIdx="${tokenIdx}"><img width=12 height=12 src="${this.pageModel.createStaticUrl('img/collapse_s.svg')}"></a>`
+                    );
 
                 } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
                     richText.push(
-                        `<a class="sh-sugg" data-tokenIdx="${tokenIdx}" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</a>`);
+                        `<span class="sh-sugg" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</span>`);
+                    richText.push(
+                        `<a contenteditable=false data-tokenIdx="${tokenIdx}"><img width=12 height=12 src="${this.pageModel.createStaticUrl('img/collapse_s.svg')}"></a>`
+                    );
 
                 } else {
                     richText.push('<span>' + token.value + '</span>');
