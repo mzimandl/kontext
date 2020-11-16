@@ -777,17 +777,11 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 if (queryObj.queryParsed[tokenIdx].isExtended) {
                     richText.push(
-                        `<span class="sh-modified" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</span>`);
-                    richText.push(
-                        `<a contenteditable=false data-tokenIdx="${tokenIdx}"><img width=12 height=12 src="${this.pageModel.createStaticUrl('img/collapse_s.svg')}"></a>`
-                    );
+                        `<span class="sugg-button" data-tokenIdx="${tokenIdx}"><span class="sh-modified" title="${this.pageModel.translate('query__token_is_expanded')}">${token.value}</span></span>`);
 
                 } else if (this.someSuggestionIsNonEmpty(queryObj.queryParsed[tokenIdx].suggestions)) {
                     richText.push(
-                        `<span class="sh-sugg" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</span>`);
-                    richText.push(
-                        `<a contenteditable=false data-tokenIdx="${tokenIdx}"><img width=12 height=12 src="${this.pageModel.createStaticUrl('img/collapse_s.svg')}"></a>`
-                    );
+                        `<span class="sugg-button" data-tokenIdx="${tokenIdx}"><span class="sh-sugg" title="${this.pageModel.translate('query__suggestions_for_token_avail')}">${token.value}</span></span>`);
 
                 } else {
                     richText.push('<span>' + token.value + '</span>');

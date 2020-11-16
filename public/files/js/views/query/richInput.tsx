@@ -156,26 +156,14 @@ export function init(
             }
         }
 
-        private handlePaste(e) {
-            e.preventDefault();
-            document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
-        }
-
-        private findLinkParent(elm:HTMLElement):HTMLElement {
-            let curr = elm;
-            while (curr !== this.props.refObject.current) {
-                if (curr.nodeName === 'A') {
-                    return curr;
-                }
-                curr = curr.parentElement;
-            }
-            return null;
+        private handlePaste(evt) {
+            evt.preventDefault();
+            document.execCommand('insertText', false, evt.clipboardData.getData('text/plain'));
         }
 
         private handleClick(evt:React.MouseEvent) {
-            const a = this.findLinkParent(evt.target as HTMLElement);
-            if (a !== null) {
-                const tokenIdx = parseInt(a.getAttribute('data-tokenIdx'));
+            if ((evt.target as HTMLElement).className === 'sugg-button') {
+                const tokenIdx = parseInt((evt.target as HTMLElement).getAttribute('data-tokenIdx'));
                 dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
                     name: ActionName.ToggleQuerySuggestionWidget,
                     payload: {
