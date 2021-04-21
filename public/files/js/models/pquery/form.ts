@@ -92,6 +92,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
                 this.submitForm(this.state).subscribe(
                     (task) => {
+                        console.log('Submiting form', task);
+                        
                         this.dispatchSideEffect<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
@@ -459,6 +461,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ),
             tap(
                 (fiResponse) => {
+                    console.log(fiResponse);
+                    
                     this.dispatchSideEffect<ACActions.InboxAddAsyncTask>({
                         name: ACActionName.InboxAddAsyncTask,
                         payload: fiResponse.task

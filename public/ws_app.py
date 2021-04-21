@@ -114,7 +114,9 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
                         else None
                         for job_id, job in jobs.items()
                     }
-                    await ws.send_json(prepare_response(jobs))
+                    response = prepare_response(jobs)
+                    logging.debug('Sending initial job status response: %s', response)
+                    await ws.send_json(response)
 
         # handle job status check
         else:
@@ -140,7 +142,9 @@ async def job_status_ws_handler(redis_client: Redis, request: web.Request) -> we
                     change = True
 
             if change:
-                await ws.send_json(prepare_response(jobs))
+                response = prepare_response(jobs)
+                logging.debug('Sending job status change response: %s', response)
+                await ws.send_json(response)
 
     logging.debug('Client disconnected from job status')
     return ws

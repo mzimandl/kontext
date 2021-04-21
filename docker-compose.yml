@@ -57,7 +57,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ws
-    command: python3 public/ws_app.py --host 0.0.0.0
+    command: python3 public/ws_app.py --host 0.0.0.0 --log debug
     volumes:
       - ./scripts/install/conf/docker/config.xml:/opt/kontext/conf/config.xml
       - corpora:/var/local/corpora
