@@ -70,7 +70,14 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
         poscount = row['poscount']
         wordcount = row['wordcount']
         try:
-            item_id = row['item_id']
+            item = row['item_id']
+            mysql_cursor.execute(
+                'insert ignore into corpus_parallel_item (item) values (%s)', (item,))
+            item_id = mysql_cursor.lastrowid
+            if item_id == 0:
+                mysql_cursor.execute('select id from corpus_parallel_item where item = %s', (item,))
+                item_id = mysql_cursor.fetchone()[0]
+
         except IndexError:
             item_id = None
 
