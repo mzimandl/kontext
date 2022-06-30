@@ -139,4 +139,11 @@ export class Actions {
         name: 'GLOBAL_CONVERT_CHART_SVG'
     };
 
+    static OverviewLoadDocstructures:Action<{
+        corpusId:string;
+        subcorpusId:string|null;
+    }> = {
+        name: 'OVERVIEW_LOAD_DOCSTRUCTURES'
+    };
+
 }

@@ -221,12 +221,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return he.translate('global__subc_info_access_private');
         };
 
+        const loadDocstructures = (id) => {
+            if (id === 'dokumenty' && props.data.docstructures === null) {
+                dispatcher.dispatch<typeof Actions.OverviewLoadDocstructures>({
+                    name: Actions.OverviewLoadDocstructures.name,
+                    payload: {
+                        corpusId: props.data.corpusId,
+                        subcorpusId: props.data.subCorpusName,
+                    }
+                });
+            }
+        }
+
         return (
             <S.SubcorpusInfo>
                 <layoutViews.TabView  items={[
                     {id: 'prehled', label: 'Přehled'},
                     {id: 'dokumenty', label: 'Seznam dokumentů'}
-                ]}>
+                ]} callback={loadDocstructures}>
                     <dl>
                         <dt>{he.translate('global__size_in_tokens')}:</dt>
                         <dd>{props.data.subCorpusSize}</dd>
@@ -254,7 +266,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         }
                     </dl>
                     <div>
-                        Dokumenty
+                        {JSON.stringify(props.data.docstructures)}
                     </div>
                 </layoutViews.TabView>
             </S.SubcorpusInfo>

@@ -243,6 +243,13 @@ export interface KeyShortcutsInfo {
     type:CorpusInfoType.KEY_SHORTCUTS;
 }
 
+export interface DocstructuresResponse {
+    pagesize:number;
+    page:number;
+    total:number;
+    data:Array<{[structattr:string]:string}>;
+}
+
 export interface CorpusInfoResponse {
     corpname:string;
     description:string;
@@ -273,6 +280,7 @@ export interface SubcorpusInfoResponse {
 
 export interface SubcorpusInfo extends SubcorpusInfoResponse {
     type:CorpusInfoType.SUBCORPUS;
+    docstructures:DocstructuresResponse|null;
 }
 
 export enum CorpusInfoType {
@@ -293,6 +301,7 @@ export interface CorpusInfoModelState {
     currentCorpus:string;
     currentSubcorpus:string;
     currentInfoType:CorpusInfoType;
+    currentDocstructures:DocstructuresResponse|null;
     isWaiting:boolean;
 }
 
@@ -310,6 +319,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 currentCorpus: null,
                 currentSubcorpus: null,
                 currentInfoType: null,
+                currentDocstructures: null,
                 isWaiting: false
             }
         );
@@ -402,6 +412,19 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 });
             }
         );
+
+        this.addActionHandler<typeof Actions.OverviewLoadDocstructures>(
+            Actions.OverviewLoadDocstructures.name,
+            action => {
+                this.loadDocstructures(action.payload.corpusId, action.payload.subcorpusId).subscribe({
+                    next: (data) => {
+                        this.changeState(state => {
+                            state.currentDocstructures = data;
+                        });
+                    }
+                })
+            }
+        );
     }
 
     private loadCorpusInfo(corpusId:string):Observable<any> {
@@ -427,6 +450,24 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 )
             );
         }
+    }
+
+    private loadDocstructures(corpusId:string, subcorpusId:string|null):Observable<DocstructuresResponse> {
+        let args = {
+            corpname: corpusId,
+            page: 1,
+            pagesize: 40,
+            refs: ['doc.id']
+        }
+        if (subcorpusId) {
+            args['usesubcorp'] = subcorpusId
+        }
+
+        return this.pluginApi.ajax$<DocstructuresResponse>(
+            HTTP.Method.GET,
+            this.pluginApi.createActionUrl('ajax_docstructure_values'),
+            args,
+        );
     }
 
     private loadSubcorpusInfo(corpusId:string, subcorpusId:string):Observable<any> {
@@ -459,6 +500,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                                         state.subcorpusData = data;
                                         state.currentCorpus = corpusId;
                                         state.currentSubcorpus = subcorpusId;
+                                        state.currentDocstructures = null;
                                     })
                                     return rxEmpty();
                                 }
@@ -485,7 +527,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                     type: CorpusInfoType.CITATION
                 };
             case CorpusInfoType.SUBCORPUS:
-                return {...this.state.subcorpusData, type:CorpusInfoType.SUBCORPUS};
+                return {...this.state.subcorpusData, type:CorpusInfoType.SUBCORPUS, docstructures:this.state.currentDocstructures};
             case CorpusInfoType.KEY_SHORTCUTS:
                 return {type:CorpusInfoType.KEY_SHORTCUTS};
             default:
