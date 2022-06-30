@@ -164,7 +164,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         } else {
             return (
                 <S.CorpusInfoBox>
-                    <h2 className="corpus-name">{props.data.corpname}</h2>
                     <dl>
                         <dt>{he.translate('global__description')}:</dt>
                         <dd>{props.data.description}</dd>
@@ -224,11 +223,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         return (
             <S.SubcorpusInfo>
-                <h2 className="subcorpus-name">
-                    {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.published ? props.data.origSubCorpusName : props.data.subCorpusName}</strong>
-                </h2>
-
-
                 <layoutViews.TabView  items={[
                     {id: 'prehled', label: 'Přehled'},
                     {id: 'dokumenty', label: 'Seznam dokumentů'}
@@ -277,9 +271,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 || props.data['other_bibliography']) {
             return (
                 <>
-                    <h4>
-                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.data.corpname})}:
-                    </h4>
                     <div className="html" dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
                     {props.data.article_ref.length > 0 ?
                         (<>
@@ -308,7 +299,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const KeyboardShortcuts:React.FC<{}> = (props) => {
         return (
             <S2.KeyboardShortcuts>
-                <h1>{he.translate('global__keyboard_shortcuts')}</h1>
                 <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
                 <table>
                     <tbody>
@@ -474,24 +464,41 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return null;
         }
 
+        _getLabelInfo() {
+            if (this.state.data) {
+                switch (this.state.data.type) {
+                    case CorpusInfoType.CORPUS:
+                        return this.state.data.corpname;
+                    case CorpusInfoType.CITATION:
+                        return he.translate('global__corpus_as_resource_{corpus}', {corpus: this.state.data.corpname});
+                    case CorpusInfoType.SUBCORPUS:
+                        return <span>{this.state.data.corpusName}{'\u00a0/\u00a0'}<strong>{this.state.data.published ? this.state.data.origSubCorpusName : this.state.data.subCorpusName}</strong></span>;
+                    case CorpusInfoType.KEY_SHORTCUTS:
+                        return he.translate('global__keyboard_shortcuts');
+                }
+            }
+            return null;
+        }
+
         render() {
             const ans = this._renderInfo();
             if (this.state.isLoading) {
                 return (
-                    <layoutViews.PopupBox customClass="centered"
-                            onCloseClick={this._handleCloseClick}
-                            takeFocus={true}>
-                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
+                    <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                        <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick} scrollable={true} label={this._getLabelInfo()}>
+                            <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />
-                    </layoutViews.PopupBox>
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay>
                 );
 
             } else if (ans) {
                 return (
-                    <layoutViews.PopupBox customClass="centered"
-                            onCloseClick={this._handleCloseClick} takeFocus={true}>
-                        {ans}
-                    </layoutViews.PopupBox>
+                    <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                        <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick} scrollable={true} label={this._getLabelInfo()}>
+                            {ans}
+                        </layoutViews.CloseableFrame>
+                    </layoutViews.ModalOverlay>
                 );
 
             } else {

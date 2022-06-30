@@ -74,6 +74,10 @@ export const CloseableFrame = styled.section`
             width: 90%;
             font-size: 140%;
             font-weight: 300;
+
+            strong {
+                font-weight: bold;
+            }
         }
 
         div.control {
