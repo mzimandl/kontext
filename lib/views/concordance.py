@@ -1220,21 +1220,22 @@ def structctx(amodel: ConcActionModel, req: KRequest[StructctxArgs], resp: KResp
 async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     pagesize = int(req.args.get('pagesize', 40))
     page = int(req.args.get('page', 1))
-    refs = req.args.getlist('refs')
 
-    docstructure = amodel.corp.get_conf('DOCSTRUCTURE')
-    q = [f'aword,<{docstructure}>[]']
+    docstruct = amodel.corp.get_conf('DOCSTRUCTURE')
+    docattrs = req.args.getlist('docattr')
+
+    q = [f'aword,<{docstruct}>[]']
     conc = await get_conc(amodel.corp, amodel.session_get('user', 'id'), q=q, translate=req.translate)
     kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
     kwicpage = kwic.kwicpage(KwicPageArgs({}, '', fromp=page, attrs='',
-                                          refs=','.join(refs), structs=docstructure, pagesize=pagesize))
+                                          refs=','.join(f'{docstruct}.{attr}' for attr in docattrs), structs=docstruct, pagesize=pagesize))
     docs_values = {
         'pagesize': pagesize,
         'page': page,
         'total': kwicpage.concsize,
         'data': [
             {
-                ref.split('=')[0]: ref.split('=')[1]
+                ref.split('=')[0].split('.')[1]: ref.split('=')[1]
                 for ref in line['ref']
             }
             for line in kwicpage.Lines

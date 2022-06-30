@@ -26,7 +26,7 @@ import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInf
 import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
-import { pipe, List, Dict } from 'cnc-tskit';
+import { List, Dict } from 'cnc-tskit';
 
 
 interface OverviewAreaState {
@@ -280,7 +280,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 <thead>
                                     <tr>
                                         <td key='id'></td>
-                                        {List.map<string, JSX.Element>(v => <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0]))}
+                                        {List.map<string, JSX.Element>(v =>
+                                            <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0])
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>

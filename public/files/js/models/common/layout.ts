@@ -460,8 +460,8 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         let args = {
             corpname: corpusId,
             page,
-            pagesize: 40,
-            refs: ['doc.id']
+            pagesize: 20,
+            docattr: ['id', 'title', 'author']
         }
         if (subcorpusId) {
             args['usesubcorp'] = subcorpusId
