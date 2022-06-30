@@ -228,32 +228,41 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.published ? props.data.origSubCorpusName : props.data.subCorpusName}</strong>
                 </h2>
 
-                <dl>
-                    <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{props.data.subCorpusSize}</dd>
-                    <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
-                    {props.data.extended_info.cql ?
-                        <>
-                            <dt>{he.translate('global__subc_query')}:</dt>
-                            <dd>
-                                <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
-                            </dd>
-                        </> :
-                        null
-                    }
-                    <dt>{he.translate('global__subc_info_access_hd')}:</dt>
-                    <dd>{getAccess()}</dd>
-                    {props.data.description ?
-                        <>
-                            <dt>{he.translate('global__description')}:</dt>
-                            <dd className="description">
-                                <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
-                            </dd>
-                        </> :
-                        null
-                    }
-                </dl>
+
+                <layoutViews.TabView  items={[
+                    {id: 'prehled', label: 'Přehled'},
+                    {id: 'dokumenty', label: 'Seznam dokumentů'}
+                ]}>
+                    <dl>
+                        <dt>{he.translate('global__size_in_tokens')}:</dt>
+                        <dd>{props.data.subCorpusSize}</dd>
+                        <dt>{he.translate('global__subcorp_created_at')}:</dt>
+                        <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
+                        {props.data.extended_info.cql ?
+                            <>
+                                <dt>{he.translate('global__subc_query')}:</dt>
+                                <dd>
+                                    <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
+                                </dd>
+                            </> :
+                            null
+                        }
+                        <dt>{he.translate('global__subc_info_access_hd')}:</dt>
+                        <dd>{getAccess()}</dd>
+                        {props.data.description ?
+                            <>
+                                <dt>{he.translate('global__description')}:</dt>
+                                <dd className="description">
+                                    <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
+                                </dd>
+                            </> :
+                            null
+                        }
+                    </dl>
+                    <div>
+                        Dokumenty
+                    </div>
+                </layoutViews.TabView>
             </S.SubcorpusInfo>
         );
     };
