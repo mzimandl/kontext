@@ -142,6 +142,7 @@ export class Actions {
     static OverviewLoadDocstructures:Action<{
         corpusId:string;
         subcorpusId:string|null;
+        page:number;
     }> = {
         name: 'OVERVIEW_LOAD_DOCSTRUCTURES'
     };

@@ -416,7 +416,11 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         this.addActionHandler<typeof Actions.OverviewLoadDocstructures>(
             Actions.OverviewLoadDocstructures.name,
             action => {
-                this.loadDocstructures(action.payload.corpusId, action.payload.subcorpusId).subscribe({
+                this.loadDocstructures(
+                    action.payload.corpusId,
+                    action.payload.subcorpusId,
+                    action.payload.page,
+                ).subscribe({
                     next: (data) => {
                         this.changeState(state => {
                             state.currentDocstructures = data;
@@ -452,10 +456,10 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         }
     }
 
-    private loadDocstructures(corpusId:string, subcorpusId:string|null):Observable<DocstructuresResponse> {
+    private loadDocstructures(corpusId:string, subcorpusId:string|null, page:number):Observable<DocstructuresResponse> {
         let args = {
             corpname: corpusId,
-            page: 1,
+            page,
             pagesize: 40,
             refs: ['doc.id']
         }

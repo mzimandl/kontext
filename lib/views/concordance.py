@@ -1229,7 +1229,7 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
     kwicpage = kwic.kwicpage(KwicPageArgs({}, '', fromp=page, attrs='',
                                           refs=','.join(refs), structs=docstructure, pagesize=pagesize))
     docs_values = {
-        'pagsize': pagesize,
+        'pagesize': pagesize,
         'page': page,
         'total': kwicpage.concsize,
         'data': [

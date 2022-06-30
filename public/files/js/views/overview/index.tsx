@@ -23,10 +23,10 @@ import {IActionDispatcher} from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
     from '../../models/common/layout';
-import { Subscription } from 'rxjs';
 import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
+import { pipe, List, Dict } from 'cnc-tskit';
 
 
 interface OverviewAreaState {
@@ -221,24 +221,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return he.translate('global__subc_info_access_private');
         };
 
-        const loadDocstructures = (id) => {
-            if (id === 'dokumenty' && props.data.docstructures === null) {
-                dispatcher.dispatch<typeof Actions.OverviewLoadDocstructures>({
-                    name: Actions.OverviewLoadDocstructures.name,
-                    payload: {
-                        corpusId: props.data.corpusId,
-                        subcorpusId: props.data.subCorpusName,
-                    }
-                });
+        const loadDocstructuresPage = (page: number) => {
+            dispatcher.dispatch<typeof Actions.OverviewLoadDocstructures>({
+                name: Actions.OverviewLoadDocstructures.name,
+                payload: {
+                    corpusId: props.data.corpusId,
+                    subcorpusId: props.data.subCorpusName,
+                    page
+                }
+            });
+        }
+
+        const initialLoadDocstructures = (id) => {
+            if (id === 'docs' && props.data.docstructures === null) {
+                loadDocstructuresPage(1);
             }
         }
 
         return (
             <S.SubcorpusInfo>
                 <layoutViews.TabView  items={[
-                    {id: 'prehled', label: 'Přehled'},
-                    {id: 'dokumenty', label: 'Seznam dokumentů'}
-                ]} callback={loadDocstructures}>
+                    {id: 'overview', label: 'Přehled TODO'},
+                    {id: 'docs', label: 'Seznam dokumentů TODO'}
+                ]} callback={initialLoadDocstructures}>
                     <dl>
                         <dt>{he.translate('global__size_in_tokens')}:</dt>
                         <dd>{props.data.subCorpusSize}</dd>
@@ -265,9 +270,29 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             null
                         }
                     </dl>
-                    <div>
-                        {JSON.stringify(props.data.docstructures)}
-                    </div>
+                    <div>{
+                        props.data.docstructures !== null ?
+                        <div>
+                            <button type='button' disabled={props.data.docstructures.page <= 1} onClick={() => loadDocstructuresPage(props.data.docstructures.page-1)}>prev</button>
+                            {props.data.docstructures.page}/{Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)}
+                            <button type='button' disabled={props.data.docstructures.page >= Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)} onClick={() => loadDocstructuresPage(props.data.docstructures.page+1)}>next</button>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <td key='id'></td>
+                                        {List.map<string, JSX.Element>(v => <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0]))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {List.map((item, i) => <tr key={`row${i}`}>
+                                        <td key='id'>{(props.data.docstructures.page-1)*props.data.docstructures.pagesize + 1 + i}</td>
+                                        {List.map((v, i) => <td key={`col${i}`}>{v}</td>, Dict.values(item))}
+                                    </tr>, props.data.docstructures.data)}
+                                </tbody>
+                            </table>
+                        </div> :
+                        null
+                    }</div>
                 </layoutViews.TabView>
             </S.SubcorpusInfo>
         );
