@@ -1218,28 +1218,26 @@ def structctx(amodel: ConcActionModel, req: KRequest[StructctxArgs], resp: KResp
 @bp.route('/ajax_docstructure_values')
 @http_action(access_level=1, return_type='json', action_model=ConcActionModel)
 async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    PAGESIZE = 40
+    pagesize = int(req.args.get('pagesize', 40))
     page = int(req.args.get('page', 1))
-    refs = req.args.getlist('refs', [])
+    refs = req.args.getlist('refs')
 
-    corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     docstructure = amodel.corp.get_conf('DOCSTRUCTURE')
     q = [f'aword,<{docstructure}>[]']
-    conc = await get_conc(amodel.corp, amodel.session_get('user', 'id'), q=q,
-                          fromp=1, pagesize=40, asnc=True,
-                          samplesize=corpus_info.sample_size, translate=req.translate
-                          )
+    conc = await get_conc(amodel.corp, amodel.session_get('user', 'id'), q=q, translate=req.translate)
     kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
     kwicpage = kwic.kwicpage(KwicPageArgs({}, '', fromp=page, attrs='',
-                                          refs=','.join(refs), structs=docstructure))
-    docs_values = [
-        {
-            'line': i,
-            **{
+                                          refs=','.join(refs), structs=docstructure, pagesize=pagesize))
+    docs_values = {
+        'pagsize': pagesize,
+        'page': page,
+        'total': kwicpage.concsize,
+        'data': [
+            {
                 ref.split('=')[0]: ref.split('=')[1]
                 for ref in line['ref']
             }
-        }
-        for i, line in enumerate(kwicpage.Lines, (page - 1) * PAGESIZE + 1)
-    ]
+            for line in kwicpage.Lines
+        ]
+    }
     return docs_values
