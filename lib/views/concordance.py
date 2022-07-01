@@ -1213,32 +1213,3 @@ def structctx(amodel: ConcActionModel, req: KRequest[StructctxArgs], resp: KResp
     result = _widectx(amodel, req.mapped_args.pos,
                       req.mapped_args.left_ctx, req.mapped_args.right_ctx)
     return result
-
-
-@bp.route('/ajax_docstructure_values')
-@http_action(access_level=1, return_type='json', action_model=ConcActionModel)
-async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    pagesize = int(req.args.get('pagesize', 40))
-    page = int(req.args.get('page', 1))
-
-    docstruct = amodel.corp.get_conf('DOCSTRUCTURE')
-    docattrs = req.args.getlist('docattr')
-
-    q = [f'aword,<{docstruct}>[]']
-    conc = await get_conc(amodel.corp, amodel.session_get('user', 'id'), q=q, translate=req.translate)
-    kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
-    kwicpage = kwic.kwicpage(KwicPageArgs({}, '', fromp=page, attrs='',
-                                          refs=','.join(f'{docstruct}.{attr}' for attr in docattrs), structs=docstruct, pagesize=pagesize))
-    docs_values = {
-        'pagesize': pagesize,
-        'page': page,
-        'total': kwicpage.concsize,
-        'data': [
-            {
-                ref.split('=')[0].split('.')[1]: ref.split('=')[1]
-                for ref in line['ref']
-            }
-            for line in kwicpage.Lines
-        ]
-    }
-    return docs_values

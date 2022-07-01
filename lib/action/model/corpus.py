@@ -434,6 +434,7 @@ class CorpusActionModel(UserActionModel):
                 'user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)
+        result['doc_structure'] = maincorp.get_conf('DOCSTRUCTURE')
         if self.corp.is_subcorpus:
             result['subcorp_size'] = self.corp.search_size
         else:

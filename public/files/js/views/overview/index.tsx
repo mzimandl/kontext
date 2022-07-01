@@ -27,6 +27,7 @@ import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
 import { List, Dict } from 'cnc-tskit';
+import { Subscription } from 'rxjs';
 
 
 interface OverviewAreaState {
@@ -203,12 +204,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     };
 
-    // --------------------- <SubcorpusInfo /> -------------------------------------
+    // --------------------- <SubcorpusOverview /> -------------------------------------
 
-    const SubcorpusInfo:React.FC<{
+    const SubcorpusOverviewTab:React.FC<{
         data:SubcorpusInfo;
     }> = (props) => {
-
         const getAccess = () => {
             if (props.data.published) {
                 return <>
@@ -221,6 +221,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return he.translate('global__subc_info_access_private');
         };
 
+        return <dl>
+            <dt>{he.translate('global__size_in_tokens')}:</dt>
+            <dd>{props.data.subCorpusSize}</dd>
+            <dt>{he.translate('global__subcorp_created_at')}:</dt>
+            <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
+            {props.data.extended_info.cql ?
+                <>
+                    <dt>{he.translate('global__subc_query')}:</dt>
+                    <dd>
+                        <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
+                    </dd>
+                </> :
+                null
+            }
+            <dt>{he.translate('global__subc_info_access_hd')}:</dt>
+            <dd>{getAccess()}</dd>
+            {props.data.description ?
+                <>
+                    <dt>{he.translate('global__description')}:</dt>
+                    <dd className="description">
+                        <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
+                    </dd>
+                </> :
+                null
+            }
+        </dl>
+    };
+
+    // --------------------- <SubcorpusOverview /> -------------------------------------
+
+    const SubcorpusDocsTab:React.FC<{
+        data:SubcorpusInfo;
+    }> = (props) => {
+
         const loadDocstructuresPage = (page: number) => {
             dispatcher.dispatch<typeof Actions.OverviewLoadDocstructures>({
                 name: Actions.OverviewLoadDocstructures.name,
@@ -232,69 +266,48 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        const initialLoadDocstructures = (id) => {
-            if (id === 'docs' && props.data.docstructures === null) {
-                loadDocstructuresPage(1);
-            }
+        if (props.data.docstructures === null) {
+            loadDocstructuresPage(1);
+            return null
         }
+
+        return <div>
+            <button type='button' disabled={props.data.docstructures.page <= 1} onClick={() => loadDocstructuresPage(props.data.docstructures.page-1)}>prev</button>
+            {props.data.docstructures.page}/{Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)}
+            <button type='button' disabled={props.data.docstructures.page >= Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)} onClick={() => loadDocstructuresPage(props.data.docstructures.page+1)}>next</button>
+            <table>
+                <thead>
+                    <tr>
+                        <td key='id'></td>
+                        {List.map<string, JSX.Element>(v =>
+                            <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0])
+                        )}
+                    </tr>
+                </thead>
+                <tbody>
+                    {List.map((item, i) => <tr key={`row${i}`}>
+                        <td key='id'>{(props.data.docstructures.page-1)*props.data.docstructures.pagesize + 1 + i}</td>
+                        {List.map((v, i) => <td key={`col${i}`}>{v}</td>, Dict.values(item))}
+                    </tr>, props.data.docstructures.data)}
+                </tbody>
+            </table>
+        </div>
+    };
+
+    // --------------------- <SubcorpusInfo /> -------------------------------------
+
+    const SubcorpusInfo:React.FC<{
+        data:SubcorpusInfo;
+    }> = (props) => {
 
         return (
             <S.SubcorpusInfo>
                 <layoutViews.TabView  items={[
                     {id: 'overview', label: 'Přehled TODO'},
                     {id: 'docs', label: 'Seznam dokumentů TODO'}
-                ]} callback={initialLoadDocstructures}>
-                    <dl>
-                        <dt>{he.translate('global__size_in_tokens')}:</dt>
-                        <dd>{props.data.subCorpusSize}</dd>
-                        <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                        <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
-                        {props.data.extended_info.cql ?
-                            <>
-                                <dt>{he.translate('global__subc_query')}:</dt>
-                                <dd>
-                                    <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
-                                </dd>
-                            </> :
-                            null
-                        }
-                        <dt>{he.translate('global__subc_info_access_hd')}:</dt>
-                        <dd>{getAccess()}</dd>
-                        {props.data.description ?
-                            <>
-                                <dt>{he.translate('global__description')}:</dt>
-                                <dd className="description">
-                                    <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
-                                </dd>
-                            </> :
-                            null
-                        }
-                    </dl>
-                    <div>{
-                        props.data.docstructures !== null ?
-                        <div>
-                            <button type='button' disabled={props.data.docstructures.page <= 1} onClick={() => loadDocstructuresPage(props.data.docstructures.page-1)}>prev</button>
-                            {props.data.docstructures.page}/{Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)}
-                            <button type='button' disabled={props.data.docstructures.page >= Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)} onClick={() => loadDocstructuresPage(props.data.docstructures.page+1)}>next</button>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <td key='id'></td>
-                                        {List.map<string, JSX.Element>(v =>
-                                            <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0])
-                                        )}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {List.map((item, i) => <tr key={`row${i}`}>
-                                        <td key='id'>{(props.data.docstructures.page-1)*props.data.docstructures.pagesize + 1 + i}</td>
-                                        {List.map((v, i) => <td key={`col${i}`}>{v}</td>, Dict.values(item))}
-                                    </tr>, props.data.docstructures.data)}
-                                </tbody>
-                            </table>
-                        </div> :
-                        null
-                    }</div>
+                ]}>
+                    <SubcorpusOverviewTab data={props.data}/>
+                    <SubcorpusDocsTab data={props.data}/>
                 </layoutViews.TabView>
             </S.SubcorpusInfo>
         );

@@ -469,7 +469,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
 
         return this.pluginApi.ajax$<DocstructuresResponse>(
             HTTP.Method.GET,
-            this.pluginApi.createActionUrl('ajax_docstructure_values'),
+            this.pluginApi.createActionUrl('corpora/ajax_docstructure_values'),
             args,
         );
     }
