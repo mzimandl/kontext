@@ -27,7 +27,7 @@ import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
 import { List, Dict } from 'cnc-tskit';
-import { Subscription } from 'rxjs';
+import { pipe, Subscription } from 'rxjs';
 
 
 interface OverviewAreaState {
@@ -255,9 +255,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         data:SubcorpusInfo;
     }> = (props) => {
 
-        const loadDocstructuresPage = (page: number) => {
-            dispatcher.dispatch<typeof Actions.OverviewLoadDocstructures>({
-                name: Actions.OverviewLoadDocstructures.name,
+        const loadDocValues = (page: number) => {
+            dispatcher.dispatch<typeof Actions.OverviewLoadDocValues>({
+                name: Actions.OverviewLoadDocValues.name,
                 payload: {
                     corpusId: props.data.corpusId,
                     subcorpusId: props.data.subCorpusName,
@@ -266,32 +266,54 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        if (props.data.docstructures === null) {
-            loadDocstructuresPage(1);
-            return null
+        if (props.data.docValues === null) {
+            loadDocValues(1);
         }
 
-        return <div>
-            <button type='button' disabled={props.data.docstructures.page <= 1} onClick={() => loadDocstructuresPage(props.data.docstructures.page-1)}>prev</button>
-            {props.data.docstructures.page}/{Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)}
-            <button type='button' disabled={props.data.docstructures.page >= Math.ceil(props.data.docstructures.total/props.data.docstructures.pagesize)} onClick={() => loadDocstructuresPage(props.data.docstructures.page+1)}>next</button>
-            <table>
-                <thead>
-                    <tr>
-                        <td key='id'></td>
-                        {List.map<string, JSX.Element>(v =>
-                            <td key={v}>{v}</td>, Dict.keys(props.data.docstructures.data[0])
-                        )}
-                    </tr>
-                </thead>
-                <tbody>
-                    {List.map((item, i) => <tr key={`row${i}`}>
-                        <td key='id'>{(props.data.docstructures.page-1)*props.data.docstructures.pagesize + 1 + i}</td>
-                        {List.map((v, i) => <td key={`col${i}`}>{v}</td>, Dict.values(item))}
-                    </tr>, props.data.docstructures.data)}
-                </tbody>
-            </table>
-        </div>
+        const toggleDocAttr = (e) => {
+            dispatcher.dispatch<typeof Actions.OverviewToggleDocAttr>({
+                name: Actions.OverviewToggleDocAttr.name,
+                payload: {attr: e.target.value}
+            });
+            loadDocValues(props.data.docValues.page);
+        }
+
+        return <S.DocOverview>
+            <layoutViews.ExpandableArea label="Document attributes TODO" initialExpanded={false}>
+                <fieldset className="doc-attrlist">
+                    {List.map(([k, v]) => <span className="doc-attr" key={k}>
+                        <label htmlFor={k}>{k}</label>
+                        <input id={k} type="checkbox" checked={v} value={k} onChange={toggleDocAttr}/>
+                    </span>, Dict.toEntries(props.data.docAttrs))}
+                </fieldset>
+            </layoutViews.ExpandableArea>
+            {props.data.docValues !== null ?
+                <div>
+                    <div>
+                        <button type='button' disabled={props.data.docValues.page <= 1} onClick={() => loadDocValues(props.data.docValues.page-1)}>prev</button>
+                        {props.data.docValues.page}/{Math.ceil(props.data.docValues.total/props.data.docValues.pagesize)}
+                        <button type='button' disabled={props.data.docValues.page >= Math.ceil(props.data.docValues.total/props.data.docValues.pagesize)} onClick={() => loadDocValues(props.data.docValues.page+1)}>next</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td key='line'></td>
+                                {List.map<string, JSX.Element>(v =>
+                                    <td key={v}>{v}</td>, Dict.keys(props.data.docValues.data[0])
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {List.map((item, i) => <tr key={`row${i}`}>
+                                <td key='line'>{(props.data.docValues.page-1)*props.data.docValues.pagesize + 1 + i}</td>
+                                {List.map((v, i) => <td key={`col${i}`}>{v}</td>, Dict.values(item))}
+                            </tr>, props.data.docValues.data)}
+                        </tbody>
+                    </table>
+                </div> :
+                'No data'
+            }
+        </S.DocOverview>
     };
 
     // --------------------- <SubcorpusInfo /> -------------------------------------

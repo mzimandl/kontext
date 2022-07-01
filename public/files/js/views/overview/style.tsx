@@ -243,3 +243,20 @@ export const SubcorpusInfo = styled.div`
         border: 1px solid #d8e7ed;
     }
 `;
+
+// ------------ <DocOverview /> --------------------------
+
+export const DocOverview = styled.div`
+    .doc-attrlist {
+        margin: 0.5em 0;
+        border-radius: 5px;
+        border-color: ${theme.colorLightFrame};
+        border-width: 0.1em;
+        border-style: solid;
+
+        .doc-attr {
+            display: inline-block;
+            margin-right: 1em;
+        }
+    }
+`;

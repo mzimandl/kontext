@@ -20,13 +20,15 @@
 
 import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
 import { take, concatMap } from 'rxjs/operators';
-import { Ident, List, pipe, HTTP } from 'cnc-tskit';
+import { Ident, List, pipe, HTTP, Dict, tuple } from 'cnc-tskit';
 import { AjaxError } from 'rxjs/ajax';
 import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { TTInitData } from '../../pages/subcorpForm';
+import { TTInitialData } from '../textTypes/common';
 
 
 export interface MessageModelState {
@@ -280,7 +282,8 @@ export interface SubcorpusInfoResponse {
 
 export interface SubcorpusInfo extends SubcorpusInfoResponse {
     type:CorpusInfoType.SUBCORPUS;
-    docstructures:DocstructuresResponse|null;
+    docValues:DocstructuresResponse|null;
+    docAttrs:{[attr:string]:boolean};
 }
 
 export enum CorpusInfoType {
@@ -301,7 +304,8 @@ export interface CorpusInfoModelState {
     currentCorpus:string;
     currentSubcorpus:string;
     currentInfoType:CorpusInfoType;
-    currentDocstructures:DocstructuresResponse|null;
+    currentDocValues:DocstructuresResponse|null;
+    currentDocAttrs:{[attr:string]:boolean};
     isWaiting:boolean;
 }
 
@@ -319,7 +323,8 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 currentCorpus: null,
                 currentSubcorpus: null,
                 currentInfoType: null,
-                currentDocstructures: null,
+                currentDocValues: null,
+                currentDocAttrs: null,
                 isWaiting: false
             }
         );
@@ -413,20 +418,39 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.OverviewLoadDocstructures>(
-            Actions.OverviewLoadDocstructures.name,
+        this.addActionHandler<typeof Actions.OverviewLoadDocValues>(
+            Actions.OverviewLoadDocValues.name,
             action => {
-                this.loadDocstructures(
-                    action.payload.corpusId,
-                    action.payload.subcorpusId,
-                    action.payload.page,
-                ).subscribe({
-                    next: (data) => {
+                if (this.state.currentDocAttrs) {
+                    let selectedAttrs = Dict.keys(Dict.filter((v, k) => v, this.state.currentDocAttrs))
+                    if (selectedAttrs.length > 0) {
+                        this.loadDocValues(
+                            action.payload.corpusId,
+                            action.payload.subcorpusId,
+                            action.payload.page,
+                            selectedAttrs,
+                        ).subscribe({
+                            next: (data) => {
+                                this.changeState(state => {
+                                    state.currentDocValues = data;
+                                });
+                            }
+                        })
+                    } else {
                         this.changeState(state => {
-                            state.currentDocstructures = data;
-                        });
+                            state.currentDocValues = null;
+                        })
                     }
-                })
+                }
+            }
+        );
+
+        this.addActionHandler<typeof Actions.OverviewToggleDocAttr>(
+            Actions.OverviewToggleDocAttr.name,
+            action => {
+                this.changeState(state => {
+                    state.currentDocAttrs[action.payload.attr] = !state.currentDocAttrs[action.payload.attr];
+                });
             }
         );
     }
@@ -448,6 +472,18 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                         this.changeState(state => {
                             state.corpusData = data;
                             state.currentCorpus = corpusId;
+                            let docStruct = this.pluginApi.getConf<string>('docStructure');
+                            if (docStruct) {
+                                state.currentDocAttrs = pipe(
+                                    this.pluginApi.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')[docStruct],
+                                    List.map(v => tuple(v.name, false)),
+                                    Dict.fromEntries(),
+                                )
+                                let bibStructAttr = this.pluginApi.getConf<TTInitialData>('textTypesData').bib_attr;
+                                if (bibStructAttr && bibStructAttr.split('.')[0] === docStruct) {
+                                    state.currentDocAttrs[bibStructAttr.split('.')[1]] = true;
+                                }
+                            }
                         })
                         return rxOf(data);
                     }
@@ -456,12 +492,12 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         }
     }
 
-    private loadDocstructures(corpusId:string, subcorpusId:string|null, page:number):Observable<DocstructuresResponse> {
+    private loadDocValues(corpusId:string, subcorpusId:string|null, page:number, attrs:Array<string>):Observable<DocstructuresResponse> {
         let args = {
             corpname: corpusId,
             page,
             pagesize: 20,
-            docattr: ['id', 'title', 'author']
+            docattr: attrs,
         }
         if (subcorpusId) {
             args['usesubcorp'] = subcorpusId
@@ -504,7 +540,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                                         state.subcorpusData = data;
                                         state.currentCorpus = corpusId;
                                         state.currentSubcorpus = subcorpusId;
-                                        state.currentDocstructures = null;
+                                        state.currentDocValues = null;
                                     })
                                     return rxEmpty();
                                 }
@@ -531,7 +567,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                     type: CorpusInfoType.CITATION
                 };
             case CorpusInfoType.SUBCORPUS:
-                return {...this.state.subcorpusData, type:CorpusInfoType.SUBCORPUS, docstructures:this.state.currentDocstructures};
+                return {...this.state.subcorpusData, type:CorpusInfoType.SUBCORPUS, docValues:this.state.currentDocValues, docAttrs:this.state.currentDocAttrs};
             case CorpusInfoType.KEY_SHORTCUTS:
                 return {type:CorpusInfoType.KEY_SHORTCUTS};
             default:

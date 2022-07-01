@@ -72,6 +72,7 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     SimpleQueryDefaultAttrs:Array<string>;
     QSEnabled:boolean;
     ShuffleConcByDefault:number;
+    docStructure:string;
 }
 
 
@@ -191,6 +192,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<Array<string>>('SimpleQueryDefaultAttrs', data.SimpleQueryDefaultAttrs);
                             this.conf.setConf<boolean>('QSEnabled', data.QSEnabled);
                             this.conf.setConf<number>('ShuffleConcByDefault', data.ShuffleConcByDefault);
+                            this.conf.setConf<string>('docStructure', data.docStructure);
                         }
                     )
 
