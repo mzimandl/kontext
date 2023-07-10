@@ -608,6 +608,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             this.state.highlightWordsStore
                         );
                     }
+                }).add(() => {
+                    Dict.forEach(
+                        (_, kcAttr) => {
+                            this.reloadAlignedHighlights(kcAttr, true);
+                        },
+                        this.state.highlightWordsStore
+                    );
+                    dispatcher.dispatch(Actions.ApplyStoredLineSelections);
                 });
             }
         );
@@ -645,6 +653,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         error: err => {
                             this.layoutModel.showMessage('error', err);
                         }
+                    }).add(() => {
+                        Dict.forEach(
+                            (_, kcAttr) => {
+                                this.reloadAlignedHighlights(kcAttr, true);
+                            },
+                            this.state.highlightWordsStore
+                        );
+                        dispatcher.dispatch(Actions.ApplyStoredLineSelections);
                     });
                 }
             }
@@ -676,14 +692,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         error: (err) => {
                             this.layoutModel.showMessage('error', err);
                         }
+                    }).add(() => {
+                        Dict.forEach(
+                            (_, kcAttr) => {
+                                this.reloadAlignedHighlights(kcAttr, true);
+                            },
+                            this.state.highlightWordsStore
+                        );
+                        dispatcher.dispatch(Actions.ApplyStoredLineSelections);
                     });
-                    Dict.forEach(
-                        (_, kcAttr) => {
-                            this.reloadAlignedHighlights(kcAttr, true);
-                        },
-                        this.state.highlightWordsStore
-                    );
-
                 }
             }
         );
