@@ -19,6 +19,7 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
+import logging
 import os
 from typing import Any, DefaultDict, Dict, Optional, Union
 
@@ -30,6 +31,7 @@ TypeAliasTable = Union[Dict[str, Union[str, None]], DefaultDict[str, Union[str, 
 
 class ConfState(object):
     conf_path = None
+    loaded = False
 
 
 # contains parsed data, it should not be accessed directly (use set, get, get_*)
@@ -45,6 +47,15 @@ SECTIONS = (
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
+def check_init(f):
+    def inner(*args, **kwargs):
+        if not _state.loaded:
+            logging.warning("Settings not yet initialized!!!")
+        return f(*args, **kwargs)
+    return inner
+
+
+@check_init
 def contains(section, key=None):
     """
     Tests whether the config contains a section or a section+key (if a key provided is not None)
@@ -52,6 +63,7 @@ def contains(section, key=None):
     return (key is None and section in _conf) or (key is not None and section in _conf and key in _conf[section])
 
 
+@check_init
 def get(section, key=None, default=None):
     """
     Gets a configuration value. This function never throws an exception in
@@ -68,6 +80,7 @@ def get(section, key=None, default=None):
     return default
 
 
+@check_init
 def get_str(section, key, default=''):
     """
     Instead of possible None the method returns an empty string.
@@ -79,6 +92,7 @@ def get_str(section, key, default=''):
     return ans
 
 
+@check_init
 def get_meta(section, key):
     """
     Returns metadata (= XML element attributes) attached to a respective element
@@ -88,6 +102,7 @@ def get_meta(section, key):
     return {}
 
 
+@check_init
 def get_full(section, key):
     """
     Returns both value and metadata of a respective configuration element
@@ -114,6 +129,7 @@ def import_bool(v):
     }[v]
 
 
+@check_init
 def get_bool(section, key, default=None):
     """
     The same as get() but returns a bool type
@@ -125,6 +141,7 @@ def get_bool(section, key, default=None):
     return import_bool(get(section, str(key).lower(), default))
 
 
+@check_init
 def get_int(section, key, default=-1):
     """
     arguments:
@@ -138,6 +155,7 @@ def get_int(section, key, default=-1):
     return int(get(section, key, default))
 
 
+@check_init
 def get_list(section, key):
     """
     Returns a list of values stored within a (section, key) pair. In case
@@ -163,6 +181,7 @@ def set(section, key, value):
     _conf[section][key] = value
 
 
+@check_init
 def get_plugin_custom_conf(plg_name) -> Dict[str, Any]:
     """
     Load an optional plug-in configuration stored in a file
@@ -284,6 +303,7 @@ def load(path, path_aliases: Optional[TypeAliasTable] = None):
     _parse_config(_state.conf_path, path_aliases)
     _load_version()
     _load_help_links(path_aliases)
+    _state.loaded = True
 
 
 def conf_path():
