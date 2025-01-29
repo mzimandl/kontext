@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.kontext
+      args:
+        - KONTEXT_CONFIG=${KONTEXT_CONFIG}
     # since we are using shared volume with nginx
     # in case different version of kontext is used
     # we need to copy files into the shared volume first

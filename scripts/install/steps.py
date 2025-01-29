@@ -280,11 +280,11 @@ class SetupKontext(InstallationStep):
 
     def run(self, build_production=True):
         print('Installing kontext...')
-        subprocess.check_call(['cp', '-n', self._kontext_conf, 'config.xml'],
+        subprocess.check_call(['cp', self._kontext_conf, 'config.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
-        subprocess.check_call(['cp', '-n', 'corplist.default.xml', 'corplist.xml'],
+        subprocess.check_call(['cp', 'corplist.default.xml', 'corplist.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
-        subprocess.check_call(['cp', '-n', self._scheduler_conf, 'rq-schedule-conf.json'],
+        subprocess.check_call(['cp', self._scheduler_conf, 'rq-schedule-conf.json'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
 
         # update config.xml with current install path
